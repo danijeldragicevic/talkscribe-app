@@ -1,33 +1,4 @@
-// Fetch supported languages
-function loadLanguages() {
-    fetch(`${CONFIG.BASE_URL}/languages`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Failed to fetch languages");
-            }
-            return response.json();
-        })
-        .then(languages => {
-            const languagesList = document.getElementById("languagesList");
-            languagesList.innerHTML = '';
-
-            languages.forEach((lang, index) => {
-                const languageSpan = document.createElement("span");
-                languageSpan.textContent = lang.languageName;
-                languagesList.appendChild(languageSpan);
-
-                if (index < languages.length - 1) {
-                    const separator = document.createElement("span");
-                    separator.textContent = " | ";
-                    languagesList.appendChild(separator);
-                }
-            });
-        })
-        .catch(error => {
-            console.error("Error loading languages:", error);
-        });
-}
-
+// === INIT ===
 document.addEventListener("DOMContentLoaded", () => {
     const savedTab = localStorage.getItem("selectedTab") || "ttsTab";
     openTab(savedTab);
@@ -36,7 +7,61 @@ document.addEventListener("DOMContentLoaded", () => {
     setupCharacterCounter();
 });
 
-// Text to Speech
+// === LANGUAGE LOADING ===
+function loadLanguages() {
+    fetch(`${CONFIG.BASE_URL}/languages`)
+        .then(response => {
+            if (!response.ok) throw new Error("Failed to fetch languages");
+            return response.json();
+        })
+        .then(languages => {
+            const languagesList = document.getElementById("languagesList");
+            languagesList.innerHTML = '';
+
+            languages.forEach((lang, index) => {
+                const span = document.createElement("span");
+                span.textContent = lang.languageName;
+                languagesList.appendChild(span);
+
+                if (index < languages.length - 1) {
+                    const sep = document.createElement("span");
+                    sep.textContent = " | ";
+                    languagesList.appendChild(sep);
+                }
+            });
+        })
+        .catch(error => console.error("Error loading languages:", error));
+}
+
+// === CHARACTER COUNTER ===
+function setupCharacterCounter() {
+    const textarea = document.getElementById("textInput");
+    const charCount = document.getElementById("charCount");
+
+    textarea.addEventListener("input", () => {
+        const length = textarea.value.length;
+        charCount.textContent = length;
+        charCount.style.color = length > 450 ? 'red' : '';
+    });
+}
+
+// === TAB SWITCHING ===
+function openTab(tabId) {
+    const tabs = document.querySelectorAll('.tab-content');
+    const buttons = document.querySelectorAll('.tab-button');
+
+    tabs.forEach(tab => tab.classList.remove('active'));
+    buttons.forEach(btn => btn.classList.remove('active'));
+
+    document.getElementById(tabId).classList.add('active');
+
+    const clicked = Array.from(buttons).find(btn => btn.getAttribute("onclick")?.includes(tabId));
+    if (clicked) clicked.classList.add('active');
+
+    localStorage.setItem("selectedTab", tabId);
+}
+
+// === TEXT TO SPEECH ===
 function sendTextToSpeech() {
     const text = document.getElementById("textInput").value.trim();
     const audioPlayer = document.getElementById("audioPlayer");
@@ -49,76 +74,39 @@ function sendTextToSpeech() {
 
     fetch(`${CONFIG.BASE_URL}/text-to-speech`, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: text })
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error("Server error or invalid response");
-        }
-        return response.blob();
-    })
-    .then(blob => {
-        const audioUrl = URL.createObjectURL(blob);
-        audioPlayer.src = audioUrl;
-        audioContainer.style.display = "block";
-        audioPlayer.play();
-    })
-    .catch(error => {
-        console.error("Error:", error);
-        audioPlayer.src = "error_message.mp3";
-        audioContainer.style.display = "block";
-        audioPlayer.play();
-    });
+        .then(res => res.ok ? res.blob() : Promise.reject(res))
+        .then(blob => {
+            const url = URL.createObjectURL(blob);
+            audioPlayer.src = url;
+            audioContainer.style.display = "block";
+            audioPlayer.play();
+        })
+        .catch(err => {
+            console.error("TTS error:", err);
+            audioPlayer.src = "error_message.mp3";
+            audioContainer.style.display = "block";
+            audioPlayer.play();
+        });
 }
 
-// Character Counter
-function setupCharacterCounter() {
-    const textarea = document.getElementById("textInput");
-    const charCount = document.getElementById("charCount");
-
-    textarea.addEventListener("input", () => {
-        const length = textarea.value.length;
-        charCount.textContent = length;
-        charCount.style.color = length > 450 ? 'red' : '';
-    });
-}
-
-// Tab Switcher
-function openTab(tabId) {
-    const tabs = document.querySelectorAll('.tab-content');
-    const buttons = document.querySelectorAll('.tab-button');
-
-    tabs.forEach(tab => tab.classList.remove('active'));
-    buttons.forEach(btn => btn.classList.remove('active'));
-
-    document.getElementById(tabId).classList.add('active');
-
-    const clickedButton = Array.from(buttons).find(btn =>
-        btn.getAttribute("onclick")?.includes(tabId)
-    );
-    if (clickedButton) clickedButton.classList.add('active');
-
-    localStorage.setItem("selectedTab", tabId);
-}
-
-
-// Typing Animation
-function animateText(element, text) {
-    element.textContent = '';
-    let index = 0;
-    const interval = setInterval(() => {
-        element.textContent += text.charAt(index);
-        index++;
-        if (index === text.length) clearInterval(interval);
+// === TEXT ANIMATION ===
+function animateText(el, text) {
+    el.textContent = '';
+    let i = 0;
+    const timer = setInterval(() => {
+        el.textContent += text.charAt(i);
+        i++;
+        if (i === text.length) clearInterval(timer);
     }, 25);
 }
 
-// Microphone Recording for Speech to Text
+// === MICROPHONE RECORDING FOR STT ===
 const recordButton = document.getElementById("recordButton");
 const statusText = document.getElementById("recordingStatus");
+const transcribingStatus = document.getElementById("transcribingStatus");
 let mediaRecorder;
 let recordedChunks = [];
 
@@ -137,6 +125,7 @@ recordButton.addEventListener("click", async () => {
 
         mediaRecorder.onstop = () => {
             statusText.textContent = "Recording stopped. Sending to backend...";
+            transcribingStatus.style.display = "block"; // ⏳ Show spinner
             sendRecordedBlob(new Blob(recordedChunks, { type: 'audio/webm' }));
         };
 
@@ -145,7 +134,7 @@ recordButton.addEventListener("click", async () => {
         setTimeout(() => {
             mediaRecorder.stop();
             stream.getTracks().forEach(track => track.stop());
-        }, 10000); // 10 seconds max
+        }, 10000);
 
     } catch (error) {
         console.error("Mic access error:", error);
@@ -192,6 +181,7 @@ function sendRecordedBlob(blob) {
     })
     .finally(() => {
         statusText.textContent = "";
+        transcribingStatus.style.display = "none"; // ✅ Hide spinner
         recordButton.disabled = false;
     });
 }
