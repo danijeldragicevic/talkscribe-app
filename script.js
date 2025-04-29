@@ -124,8 +124,8 @@ recordButton.addEventListener("click", async () => {
         };
 
         mediaRecorder.onstop = () => {
-            statusText.textContent = "Recording stopped. Sending to backend...";
-            transcribingStatus.style.display = "block"; // ⏳ Show spinner
+            statusText.textContent = "";
+            transcribingStatus.style.display = "block";
             sendRecordedBlob(new Blob(recordedChunks, { type: 'audio/webm' }));
         };
 
@@ -181,7 +181,7 @@ function sendRecordedBlob(blob) {
     })
     .finally(() => {
         statusText.textContent = "";
-        transcribingStatus.style.display = "none"; // ✅ Hide spinner
+        transcribingStatus.style.display = "none";
         recordButton.disabled = false;
     });
 }
