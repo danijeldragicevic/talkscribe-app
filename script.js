@@ -87,7 +87,7 @@ function sendTextToSpeech() {
         .catch(async err => {
             if (err instanceof Response && err.status === 429) {
                 const message = await err.json();
-                alert("You're sending too many requests. Please slow down or try again later.");
+                alert("You're sending too many requests. Please slow down or try again in few minutes.");
                 console.warn("Rate limit:", message?.error || "Too many requests");
             } else {
                 console.error("TTS error:", err);
@@ -181,7 +181,7 @@ function sendRecordedBlob(blob) {
     .catch(async err => {
         if (err instanceof Response && err.status === 429) {
             const message = await err.json();
-            alert("You're sending too many requests. Please slow down or try again later.");
+            alert("You're sending too many requests. Please slow down or try again in few minutes.");
             console.warn("Rate limit:", message?.error || "Too many requests");
         } else {
             console.error("STT error:", err);
