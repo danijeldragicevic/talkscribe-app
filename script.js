@@ -84,11 +84,17 @@ function sendTextToSpeech() {
             audioContainer.style.display = "block";
             audioPlayer.play();
         })
-        .catch(err => {
-            console.error("TTS error:", err);
-            audioPlayer.src = "error_message.mp3";
-            audioContainer.style.display = "block";
-            audioPlayer.play();
+        .catch(async err => {
+            if (err instanceof Response && err.status === 429) {
+                const message = await err.json();
+                alert("You're sending too many requests. Please slow down or try again later.");
+                console.warn("Rate limit:", message?.error || "Too many requests");
+            } else {
+                console.error("TTS error:", err);
+                audioPlayer.src = "error_message.mp3";
+                audioContainer.style.display = "block";
+                audioPlayer.play();
+            }
         });
 }
 
