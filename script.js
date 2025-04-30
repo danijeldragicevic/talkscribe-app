@@ -77,7 +77,17 @@ function sendTextToSpeech() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: text })
     })
-        .then(res => res.ok ? res.blob() : Promise.reject(res))
+        .then(res => {
+            if (res.ok) {
+                return res.blob();
+            } else if (res.status === 429) {
+                return res.json().then(data => {
+                    throw new Error(data.error || "Too many requests");
+                });
+            } else {
+                return Promise.reject(res);
+            }
+        })
         .then(blob => {
             const url = URL.createObjectURL(blob);
             audioPlayer.src = url;
@@ -85,10 +95,14 @@ function sendTextToSpeech() {
             audioPlayer.play();
         })
         .catch(err => {
-            console.error("TTS error:", err);
-            audioPlayer.src = "error_message.mp3";
-            audioContainer.style.display = "block";
-            audioPlayer.play();
+            if (err.message === "Too many requests") {
+                alert("You are sending too many requests. Please wait a moment and try again.");
+            } else {
+                console.error("TTS error:", err);
+                audioPlayer.src = "error_message.mp3";
+                audioContainer.style.display = "block";
+                audioPlayer.play();
+            }
         });
 }
 
