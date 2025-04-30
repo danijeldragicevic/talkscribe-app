@@ -178,12 +178,18 @@ function sendRecordedBlob(blob) {
         container.appendChild(content);
         log.prepend(container);
     })
-    .catch(err => {
-        console.error("STT error:", err);
-        const errorBox = document.createElement("div");
-        errorBox.classList.add("transcribed-output");
-        errorBox.textContent = "An error occurred while converting the audio.";
-        log.prepend(errorBox);
+    .catch(async err => {
+        if (err instanceof Response && err.status === 429) {
+            const message = await err.json();
+            alert("You're sending too many requests. Please slow down or try again later.");
+            console.warn("Rate limit:", message?.error || "Too many requests");
+        } else {
+            console.error("STT error:", err);
+            const errorBox = document.createElement("div");
+            errorBox.classList.add("transcribed-output");
+            errorBox.textContent = "An error occurred while converting the audio.";
+            log.prepend(errorBox);
+        }
     })
     .finally(() => {
         statusText.textContent = "";
