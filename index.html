@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Talkscribe</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+</head>
+<body>
+  <h1>Text & Speech Converter</h1>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-button" onclick="openTab('ttsTab')">Text to Speech</button>
+    <button class="tab-button" onclick="openTab('sttTab')">Speech to Text</button>
+  </div>
+
+  <!-- Text to Speech Tab -->
+  <div id="ttsTab" class="tab-content">
+    <p id="introText">
+      Type any message below and I’ll read it aloud for you.<br/>
+      I can automatically detect the language you use and speak it fluently.
+    </p>
+
+    <textarea id="textInput" maxlength="500" placeholder="Type up to 500 characters..."></textarea>
+    <p><span id="charCount">0</span> / 500 characters</p>
+    <button onclick="sendTextToSpeech()">Convert to Speech</button>
+
+    <div id="audioContainer">
+      <audio id="audioPlayer" controls></audio>
+    </div>
+  </div>
+
+  <!-- Speech to Text Tab -->
+  <div id="sttTab" class="tab-content">
+    <p>
+      Click the button below and speak for up to <strong>10 seconds</strong>.<br />
+      I’ll transcribe your voice into text.
+    </p>
+
+    <button id="recordButton">Start Recording</button>
+    <span id="recordingStatus" style="display: block; margin-top: 10px;"></span>
+
+    <div id="transcribingStatus" style="display: none; margin-top: 20px;">
+      <span class="spinner"></span> Transcribing, please wait...
+    </div>
+
+    <div id="transcriptionLog" class="transcription-log"></div>
+  </div>
+
+  <!-- Supported languages -->
+  <div id="languagesBlock">
+    <h3>Supported Languages:</h3>
+    <p id="languagesList"></p>
+  </div>
+
+  <hr />
+  <footer id="footer">
+    <p>
+      This service is open-source and completely free to use.<br />
+      Built with ❤️ by 
+      <a href="https://www.linkedin.com/in/danijeldragicevic/" target="_blank">Danijel Dragičević</a> |
+      <a href="https://github.com/danijeldragicevic/talkscribe-api" target="_blank">GitHub</a>
+    </p>
+    <p class="footer-note">
+      Service uses AI to generate speech and transcribe voice. No text or audio is stored — your data is processed temporarily and deleted automatically.
+    </p>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
