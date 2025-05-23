@@ -1,7 +1,7 @@
 # Talkscribe — Text & Speech Converter
 Talkscribe is a simple and accessible web application that converts text into speech and transcribes voice into text. It is designed for clarity and ease of use — suitable for people with limited mobility or assistive needs.
 
-The app uses AI-powered services to generate speech and transcribe spoken audio.
+You can test and interact with this application available at https://talkscribe.org/.
 
 ## Features
 - Text to Speech
